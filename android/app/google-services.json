@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "197017191026",
+    "project_id": "dapoeramiapp",
+    "storage_bucket": "dapoeramiapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:197017191026:android:96b8e0521f6b045b3938eb",
+        "android_client_info": {
+          "package_name": "com.dapoer_ami"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-BWl65TToifehwxJPcrIXXKOtdddbhLQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
