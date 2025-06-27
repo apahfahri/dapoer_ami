@@ -73,7 +73,6 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(title: const Text('Detail Pesanan')),
       body: StreamBuilder<DocumentSnapshot>(
         stream:

@@ -50,10 +50,11 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         // Atur tema untuk AppBar agar konsisten di seluruh aplikasi.
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blueAccent,
+          backgroundColor: Color.fromARGB(255, 21, 55, 114),
           foregroundColor: Colors.white,
           elevation: 2,
         ),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 188, 219, 255),
       ),
       // 'home' akan diisi oleh AuthWrapper yang menentukan halaman awal.
       home: const AuthWrapper(),

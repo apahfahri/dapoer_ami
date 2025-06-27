@@ -77,10 +77,8 @@ class _KelolaBahanBakuPageState extends State<KelolaBahanBakuPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
         title: const Text('Kelola Bahan Baku'),
-        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore.collection('bahan_baku').orderBy('nama').snapshots(),

@@ -25,10 +25,8 @@ class _RiwayatPesananPageState extends State<RiwayatPesananPage> {
         .orderBy('tanggalKirim', descending: true);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
         title: const Text('Riwayat & Pendapatan'),
-        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: queryPesananSelesai.snapshots(),

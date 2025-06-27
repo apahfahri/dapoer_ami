@@ -37,7 +37,6 @@ class _KelolaPesananPageState extends State<KelolaPesananPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
         title: const Text('Kelola Pesanan'),
         bottom: TabBar(
@@ -48,7 +47,6 @@ class _KelolaPesananPageState extends State<KelolaPesananPage>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white54,
         ),
-        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: TabBarView(
         controller: _tabController,

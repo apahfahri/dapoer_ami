@@ -120,7 +120,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       drawer: _buildAppDrawer(),
       appBar: AppBar(
         title: const Text('Dapoer Ami Catering'),
@@ -133,7 +132,6 @@ class _HomePageState extends State<HomePage> {
             tooltip: 'Refresh Data',
           ),
         ],
-        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: RefreshIndicator(
         // Pull-to-refresh tetap memanggil fungsi yang sama
