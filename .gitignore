@@ -41,3 +41,61 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# File dan folder yang dihasilkan oleh sistem operasi
+.DS_Store
+.thumb
+Thumbs.db
+desktop.ini
+
+# File yang dihasilkan oleh editor kode seperti VS Code atau Android Studio
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Abaikan file build dan file sementara yang dibuat oleh Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+build/
+
+# File log dan file crash report
+*.log
+*.dmp
+
+# PENTING: File konfigurasi Firebase
+# File ini berisi kunci identifikasi untuk proyek Firebase Anda.
+# SANGAT DISARANKAN untuk mengabaikannya jika repositori Anda bersifat publik.
+# Setiap pengembang harus menjalankan `flutterfire configure` di mesin mereka sendiri.
+firebase_options.dart
+
+# Kunci API dan kredensial sensitif lainnya
+# Jangan pernah menyimpan file kunci atau password di dalam Git.
+*.keystore
+*.jks
+key.properties
+service_account_key.json
+
+# File konfigurasi Firebase untuk Android dan iOS.
+# Anda bisa memilih untuk menyimpannya (menghapus dari .gitignore) jika ini adalah proyek privat,
+# tetapi lebih aman untuk mengabaikannya dan menambahkannya secara manual di setiap mesin.
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+
+# Abaikan file paket aplikasi yang dihasilkan
+*.apk
+*.aab
+*.ipa
+*.app
+
+# Folder profil dan rilis dari Xcode
+/ios/Flutter/App.framework
+/ios/Flutter/engine.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/pod_runner.xcconfig
+/ios/Pods/
+/ios/Runner.xcworkspace/
