@@ -1,14 +1,16 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+
 import 'package:dapoer_ami/models/pesanan_model.dart';
 import 'package:dapoer_ami/pages/KelolaBahanBakuPage.dart';
 import 'package:dapoer_ami/pages/KelolaMenuPage.dart';
 import 'package:dapoer_ami/pages/KelolaPesananPage.dart';
 import 'package:dapoer_ami/pages/TambahEditPesananPage.dart';
 import 'package:dapoer_ami/pages/LoginPage.dart';
+import 'package:dapoer_ami/pages/RiwayatPesananPage.dart';
 import 'package:dapoer_ami/widgets/DetailPesananContent.dart';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -118,9 +120,11 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       drawer: _buildAppDrawer(),
       appBar: AppBar(
         title: const Text('Dapoer Ami Catering'),
+        centerTitle: false,
         // --- PERUBAHAN UTAMA: Menambahkan tombol refresh di sini ---
         actions: [
           IconButton(
@@ -129,6 +133,7 @@ class _HomePageState extends State<HomePage> {
             tooltip: 'Refresh Data',
           ),
         ],
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: RefreshIndicator(
         // Pull-to-refresh tetap memanggil fungsi yang sama
@@ -152,14 +157,16 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 16),
                 Center(
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.add_shopping_cart, size: 28),
-                    label: const Text('Tambah Pesanan Baru'),
+                    icon: const Icon(Icons.add_shopping_cart, size: 28, color: Colors.white),
+                    label: const Text('Tambah Pesanan Baru', 
+                        style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(16),
                       textStyle: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18, fontWeight: FontWeight.bold,),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
+                          backgroundColor: const Color(0xFF4CAF50), // Warna hijau
                     ),
                     onPressed: () => Navigator.push(
                         context,
@@ -248,6 +255,17 @@ class _HomePageState extends State<HomePage> {
                     MaterialPageRoute(
                         builder: (context) => const KelolaBahanBakuPage()));
               }),
+          _buildDrawerItem(
+            icon: Icons.history_edu_outlined,
+            text: 'Riwayat & Pendapatan',
+            onTap: () {
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const RiwayatPesananPage()));
+            },
+          ),
           const Divider(),
           _buildDrawerItem(
               icon: Icons.logout,

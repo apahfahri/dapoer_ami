@@ -76,8 +76,10 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
         title: const Text('Kelola Menu'),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore.collection('menu').orderBy('namaMenu').snapshots(),

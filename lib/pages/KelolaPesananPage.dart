@@ -18,7 +18,7 @@ class _KelolaPesananPageState extends State<KelolaPesananPage>
     'Semua',
     'Baru',
     'Diproses',
-    'Selesai',
+    // 'Selesai',
     'Batal'
   ];
 
@@ -37,13 +37,18 @@ class _KelolaPesananPageState extends State<KelolaPesananPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
         title: const Text('Kelola Pesanan'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: _statuses.map((String status) => Tab(text: status)).toList(),
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white54,
         ),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: TabBarView(
         controller: _tabController,
