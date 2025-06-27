@@ -18,11 +18,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Instance untuk mengakses Firebase
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // State untuk data statistik
+  // --- LOGIKA TIMER DIHAPUS ---
+
   bool _isLoadingStats = true;
   int _pesananHariIni = 0;
   int _perluDiproses = 0;
@@ -31,13 +31,21 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // Tetap panggil data saat halaman pertama kali dimuat
     _fetchStatistikData();
   }
 
-  // Fungsi untuk mengambil data statistik
-  Future<void> _fetchStatistikData() async {
-    if (!mounted) return;
-    setState(() => _isLoadingStats = true);
+  // --- dispose() tidak lagi diperlukan untuk timer, bisa dihapus atau dibiarkan kosong ---
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  // --- Fungsi fetch data tidak perlu diubah, parameter showLoading tetap berguna ---
+  Future<void> _fetchStatistikData({bool showLoading = true}) async {
+    if (showLoading && mounted) {
+      setState(() => _isLoadingStats = true);
+    }
 
     try {
       final results = await Future.wait([
@@ -45,13 +53,13 @@ class _HomePageState extends State<HomePage> {
         _getPerluDiprosesCount(),
         _getSelesaiBulanIniCount(),
       ]);
-
-      if (!mounted) return;
-      setState(() {
-        _pesananHariIni = results[0];
-        _perluDiproses = results[1];
-        _selesaiBulanIni = results[2];
-      });
+      if (mounted) {
+        setState(() {
+          _pesananHariIni = results[0];
+          _perluDiproses = results[1];
+          _selesaiBulanIni = results[2];
+        });
+      }
     } catch (e) {
       print("Error fetching stats: $e");
     } finally {
@@ -59,14 +67,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // --- Query Statistik (tidak berubah) ---
   Future<int> _getPesananHariIniCount() async {
     final now = DateTime.now();
     final startOfToday =
         Timestamp.fromDate(DateTime(now.year, now.month, now.day));
     final endOfToday =
         Timestamp.fromDate(DateTime(now.year, now.month, now.day + 1));
-
     final snapshot = await _firestore
         .collection('pesanan')
         .where('tanggalKirim', isGreaterThanOrEqualTo: startOfToday)
@@ -89,7 +95,6 @@ class _HomePageState extends State<HomePage> {
     final now = DateTime.now();
     final startOfMonth = Timestamp.fromDate(DateTime(now.year, now.month, 1));
     final endOfMonth = Timestamp.fromDate(DateTime(now.year, now.month + 1, 1));
-
     final snapshot = await _firestore
         .collection('pesanan')
         .where('status', isEqualTo: 'Selesai')
@@ -100,7 +105,6 @@ class _HomePageState extends State<HomePage> {
     return snapshot.count ?? 0;
   }
 
-  // Fungsi untuk logout
   Future<void> _logout() async {
     await _auth.signOut();
     if (mounted) {
@@ -114,14 +118,21 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _buildAppDrawer(),
       appBar: AppBar(
         title: const Text('Dapoer Ami Catering'),
+        // --- PERUBAHAN UTAMA: Menambahkan tombol refresh di sini ---
         actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _fetchStatistikData(showLoading: true),
+            tooltip: 'Refresh Data',
+          ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _fetchStatistikData,
+        // Pull-to-refresh tetap memanggil fungsi yang sama
+        onRefresh: () => _fetchStatistikData(showLoading: true),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
@@ -138,11 +149,25 @@ class _HomePageState extends State<HomePage> {
                 const Text('Berikut ringkasan aktivitas catering Anda.'),
                 const SizedBox(height: 24),
                 _buildStatistikSection(),
-                const SizedBox(height: 24),
-
-                // --- BAGIAN INI TELAH DIUBAH ---
-                _buildAksiCepatSection(),
-
+                const SizedBox(height: 16),
+                Center(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.add_shopping_cart, size: 28),
+                    label: const Text('Tambah Pesanan Baru'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                      textStyle: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const TambahEditPesananPage())),
+                  ),
+                ),
                 const SizedBox(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,21 +196,98 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Sisa kode tidak ada perubahan...
+  Widget _buildAppDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text('Dapoer Ami',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
+                Text('Manajemen Catering',
+                    style: TextStyle(color: Colors.white70, fontSize: 14)),
+              ],
+            ),
+          ),
+          _buildDrawerItem(
+              icon: Icons.assignment_outlined,
+              text: 'Kelola Pesanan',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const KelolaPesananPage()));
+              }),
+          _buildDrawerItem(
+              icon: Icons.restaurant_menu_outlined,
+              text: 'Kelola Menu',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const KelolaMenuPage()));
+              }),
+          _buildDrawerItem(
+              icon: Icons.inventory_2_outlined,
+              text: 'Kelola Bahan Baku',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const KelolaBahanBakuPage()));
+              }),
+          const Divider(),
+          _buildDrawerItem(
+              icon: Icons.logout,
+              text: 'Logout',
+              onTap: () {
+                Navigator.pop(context);
+                _logout();
+              }),
+        ],
+      ),
+    );
+  }
+
+  ListTile _buildDrawerItem(
+      {required IconData icon,
+      required String text,
+      required GestureTapCallback onTap}) {
+    return ListTile(leading: Icon(icon), title: Text(text), onTap: onTap);
+  }
+
   Widget _buildStatistikSection() {
-    return Row(
-      children: [
-        Expanded(
-            child: _buildStatCard('Hari Ini', _pesananHariIni, Icons.today,
-                Colors.blue, _isLoadingStats)),
-        const SizedBox(width: 12),
-        Expanded(
-            child: _buildStatCard('Perlu Diproses', _perluDiproses,
-                Icons.pending_actions, Colors.orange, _isLoadingStats)),
-        const SizedBox(width: 12),
-        Expanded(
-            child: _buildStatCard('Selesai Bln Ini', _selesaiBulanIni,
-                Icons.check_circle, Colors.green, _isLoadingStats)),
-      ],
+    final List<Widget> statCards = [
+      _buildStatCard('Hari Ini', _pesananHariIni, Icons.today, Colors.blue,
+          _isLoadingStats),
+      _buildStatCard('Pending', _perluDiproses, Icons.pending_actions,
+          Colors.orange, _isLoadingStats),
+      _buildStatCard('Selesai/Bln', _selesaiBulanIni, Icons.check_circle,
+          Colors.green, _isLoadingStats),
+    ];
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 140,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.9,
+      ),
+      itemCount: statCards.length,
+      itemBuilder: (context, index) => statCards[index],
     );
   }
 
@@ -193,111 +295,42 @@ class _HomePageState extends State<HomePage> {
       String title, int value, IconData icon, Color color, bool isLoading) {
     return Card(
       elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 30, color: color),
-            const SizedBox(height: 8),
-            isLoading
-                ? const SizedBox(
-                    height: 27,
-                    width: 27,
-                    child: CircularProgressIndicator(strokeWidth: 3))
-                : Text(value.toString(),
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            Text(title, style: const TextStyle(color: Colors.grey)),
+            const Spacer(),
+            SizedBox(
+              height: 30,
+              child: isLoading
+                  ? const Center(
+                      child: SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 3)))
+                  : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(value.toString(),
+                          style: const TextStyle(
+                              fontSize: 28, fontWeight: FontWeight.bold)),
+                    ),
+            ),
+            const Spacer(),
+            Text(title,
+                style: const TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAksiCepatSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ElevatedButton.icon(
-          icon: const Icon(Icons.add_shopping_cart, size: 28),
-          label: const Text('Tambah Pesanan Baru'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle:
-                const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const TambahEditPesananPage())),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12.0, // Jarak horizontal antar tombol
-          runSpacing: 12.0, // Jarak vertikal jika tombol pindah baris
-          alignment: WrapAlignment.center,
-          children: [
-            _buildSecondaryButton(
-              label: 'Kelola Pesanan',
-              icon: Icons.assignment_outlined,
-              onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const KelolaPesananPage())),
-            ),
-            _buildSecondaryButton(
-              label: 'Kelola Menu',
-              icon: Icons.restaurant_menu_outlined,
-              onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const KelolaMenuPage())),
-            ),
-            // BUGFIX: Mengganti ikon yang duplikat
-            _buildSecondaryButton(
-              label: 'Kelola Bahan',
-              icon: Icons.inventory_2_outlined,
-              onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const KelolaBahanBakuPage())),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-
-  // Helper widget untuk membuat tombol sekunder agar kode tidak berulang
-  Widget _buildSecondaryButton(
-      {required String label,
-      required IconData icon,
-      required VoidCallback onPressed}) {
-    // Tombol ini akan memiliki lebar minimal, namun bisa membesar
-    return ElevatedButton.icon(
-      icon: Icon(icon, size: 20),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Theme.of(context).primaryColor,
-        backgroundColor: Colors.white,
-        side:
-            BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.5)),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 1,
-      ),
-      onPressed: onPressed,
     );
   }
 
   Widget _buildDaftarPesananTerbaru() {
     final currencyFormatter =
         NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection('pesanan')
@@ -314,7 +347,6 @@ class _HomePageState extends State<HomePage> {
                   child: Text('Belum ada pesanan.',
                       style: TextStyle(color: Colors.grey))));
         }
-
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -323,7 +355,6 @@ class _HomePageState extends State<HomePage> {
             var doc = snapshot.data!.docs[index];
             var data = doc.data() as Map<String, dynamic>;
             var status = data['status'] ?? 'Baru';
-
             return Card(
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
@@ -335,11 +366,13 @@ class _HomePageState extends State<HomePage> {
                 title: Text(data['namaPelanggan'] ?? 'Tanpa Nama',
                     style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(
-                    'Kirim: ${DateFormat('dd MMM', 'id_ID').format((data['tanggalKirim'] as Timestamp).toDate())} - ${currencyFormatter.format(data['grandTotal'] ?? 0)}'),
+                    'Kirim: ${DateFormat('dd MMM yy', 'id_ID').format((data['tanggalKirim'] as Timestamp).toDate())} - ${currencyFormatter.format(data['grandTotal'] ?? 0)}'),
                 trailing: Chip(
                   label: Text(status,
-                      style:
-                          const TextStyle(color: Colors.white, fontSize: 12)),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
                   backgroundColor: _getStatusColor(status),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
