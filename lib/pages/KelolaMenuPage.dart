@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../models/menu_model.dart';
 import '../pages/TambahEditMenuPage.dart';
+import '../widgets/DetailMenuContent.dart';
+
 
 class KelolaMenuPage extends StatefulWidget {
   const KelolaMenuPage({super.key});
@@ -28,7 +30,8 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: const Text('Konfirmasi Hapus'),
-          content: Text('Apakah Anda yakin ingin menghapus menu "${menu.namaMenu}"? Aksi ini tidak dapat dibatalkan.'),
+          content: Text(
+              'Apakah Anda yakin ingin menghapus menu "${menu.namaMenu}"? Aksi ini tidak dapat dibatalkan.'),
           actions: <Widget>[
             TextButton(
               child: const Text('Batal'),
@@ -52,8 +55,8 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
                     );
                   }
                 } catch (e) {
-                   Navigator.of(ctx).pop();
-                   if (mounted) {
+                  Navigator.of(ctx).pop();
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Gagal menghapus menu: $e'),
@@ -77,7 +80,6 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
         title: const Text('Kelola Menu'),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Mengambil data dari collection 'menu' dan mengurutkannya berdasarkan nama
         stream: _firestore.collection('menu').orderBy('namaMenu').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -98,41 +100,98 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               // Konversi data dari Firestore menjadi objek Menu
-              Menu menu = Menu.fromFirestore(snapshot.data!.docs[index] as DocumentSnapshot<Map<String, dynamic>>);
-              
+              Menu menu = Menu.fromFirestore(snapshot.data!.docs[index]
+                  as DocumentSnapshot<Map<String, dynamic>>);
+
               return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
                 elevation: 2,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  title: Text(
-                    menu.namaMenu,
-                    style: const TextStyle(fontWeight: FontWeight.bold)
-                  ),
-                  subtitle: Text(
-                    'Harga Jual: ${_currencyFormatter.format(menu.harga)}\nHPP: ${_currencyFormatter.format(menu.hpp)}',
-                  ),
-                  isThreeLine: true,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
-                        tooltip: 'Edit Menu',
-                        onPressed: () {
-                          // Navigasi ke halaman edit dengan membawa data menu yang dipilih
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => TambahEditMenuPage(menu: menu)),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                        tooltip: 'Hapus Menu',
-                        onPressed: () => _showDeleteConfirmationDialog(menu),
-                      ),
-                    ],
+                // Gunakan InkWell agar seluruh area Card bisa di-klik untuk detail
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    // --- PERBAIKAN UTAMA ADA DI SINI ---
+                    // Tidak perlu membuat objek baru, cukup gunakan objek 'menu' yang sudah ada.
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(16))),
+                      builder: (context) {
+                        // Gunakan DraggableScrollableSheet agar BottomSheet bisa di-scroll
+                        return DraggableScrollableSheet(
+                          expand: false,
+                          initialChildSize: 0.5,
+                          minChildSize: 0.3,
+                          maxChildSize: 0.8,
+                          builder: (context, scrollController) {
+                            return SingleChildScrollView(
+                              controller: scrollController,
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
+                                // Panggil widget reusable kita dengan data 'menu'
+                                child: DetailMenuContent(menu: menu),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0, bottom: 8.0, top: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(menu.namaMenu,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Harga Jual: ${_currencyFormatter.format(menu.harga)}',
+                                ),
+                                Text(
+                                  'HPP: ${_currencyFormatter.format(menu.hpp)}',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Tombol aksi (Edit & Hapus)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined,
+                                  color: Colors.blueAccent),
+                              tooltip: 'Edit Menu',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          TambahEditMenuPage(menu: menu)),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.redAccent),
+                              tooltip: 'Hapus Menu',
+                              onPressed: () => _showDeleteConfirmationDialog(menu),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -142,7 +201,6 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigasi ke halaman tambah menu (tanpa membawa data)
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const TambahEditMenuPage()),
@@ -154,3 +212,4 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
     );
   }
 }
+

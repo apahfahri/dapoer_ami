@@ -4,7 +4,7 @@ import 'package:dapoer_ami/pages/KelolaMenuPage.dart';
 import 'package:dapoer_ami/pages/KelolaPesananPage.dart';
 import 'package:dapoer_ami/pages/TambahEditPesananPage.dart';
 import 'package:dapoer_ami/pages/LoginPage.dart';
-import 'package:dapoer_ami/pages/DetailPesananContent.dart';
+import 'package:dapoer_ami/widgets/DetailPesananContent.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
