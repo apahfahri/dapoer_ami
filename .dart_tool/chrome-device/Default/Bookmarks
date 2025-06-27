@@ -1,0 +1,110 @@
+{
+   "checksum": "241fba7998ab1d6ae48617da686c76fb",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "date_added": "13394114870654512",
+            "date_last_used": "0",
+            "guid": "e6a03b9c-b0f8-4e6e-a2e0-d3e582856c1e",
+            "id": "13",
+            "name": "ASUS Software Portal - Exclusive technology",
+            "type": "url",
+            "url": "https://www.asus.com/Software-and-Innovations-Portal/"
+         }, {
+            "date_added": "13394114870653625",
+            "date_last_used": "0",
+            "guid": "dc72ecc4-3869-45f2-877a-1bcae05883aa",
+            "id": "12",
+            "name": "MyASUS Software - Get the best from ASUS PC",
+            "type": "url",
+            "url": "https://www.asus.com/ASUS-Software/"
+         }, {
+            "date_added": "13394114870651945",
+            "date_last_used": "0",
+            "guid": "a5da3031-a207-431e-88cc-d0933c90f8a2",
+            "id": "11",
+            "name": "McAfee LiveSafe",
+            "type": "url",
+            "url": "https://home.mcafee.com/root/campaign.aspx?cid=247829"
+         }, {
+            "date_added": "13394112258552532",
+            "date_last_used": "0",
+            "guid": "c6e46003-3953-4adb-8cf0-20fb5b06cc64",
+            "id": "8",
+            "name": "ASUS Software Portal - Exclusive technology",
+            "type": "url",
+            "url": "https://www.asus.com/Software-and-Innovations-Portal/"
+         }, {
+            "date_added": "13394112258552273",
+            "date_last_used": "0",
+            "guid": "2424694d-c65c-4130-97a8-a632c16a66fa",
+            "id": "7",
+            "name": "MyASUS Software - Get the best from ASUS PC",
+            "type": "url",
+            "url": "https://www.asus.com/ASUS-Software/"
+         }, {
+            "date_added": "13394112258550726",
+            "date_last_used": "0",
+            "guid": "d93fcb74-86a6-489a-9bdf-3d5e785f0c22",
+            "id": "6",
+            "name": "McAfee LiveSafe",
+            "type": "url",
+            "url": "https://home.mcafee.com/root/campaign.aspx?cid=247829"
+         } ],
+         "date_added": "13394112258176351",
+         "date_last_used": "0",
+         "date_modified": "13394114870654512",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Bilah bookmark",
+         "type": "folder"
+      },
+      "other": {
+         "children": [ {
+            "children": [ {
+               "children": [ {
+                  "date_added": "13245081596051019",
+                  "date_last_used": "0",
+                  "guid": "cbd87ad1-8a9d-499d-b63c-ccf5e132d5f1",
+                  "id": "16",
+                  "name": "DxDiag - Wikipedia",
+                  "type": "url",
+                  "url": "https://en.wikipedia.org/wiki/DxDiag"
+               } ],
+               "date_added": "13245820144646680",
+               "date_last_used": "0",
+               "date_modified": "13245820144646680",
+               "guid": "5c17f5ab-01a0-4755-bf3e-63684a8ed31f",
+               "id": "15",
+               "name": "Group 1",
+               "type": "folder"
+            } ],
+            "date_added": "13245820144646011",
+            "date_last_used": "0",
+            "date_modified": "13245820144646011",
+            "guid": "3d2bcd4b-d963-4733-90b8-20638f5d9c85",
+            "id": "14",
+            "name": "Tabs set aside",
+            "type": "folder"
+         } ],
+         "date_added": "13394112258176354",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Bookmark lain",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13394112258176357",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Bookmark seluler",
+         "type": "folder"
+      }
+   },
+   "version": 1
+}
