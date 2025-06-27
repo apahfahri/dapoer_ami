@@ -60,6 +60,7 @@ class DetailPesananContent extends StatelessWidget {
           itemCount: pesanan.items.length,
           separatorBuilder: (context, index) => const Divider(height: 1, thickness: 0.5),
           itemBuilder: (context, index) {
+            // Mengirimkan objek ItemPesanan ke helper widget
             return _buildMenuItemWithIngredients(pesanan.items[index]);
           },
         ),
@@ -104,12 +105,19 @@ class DetailPesananContent extends StatelessWidget {
     );
   }
 
-  // --- BAGIAN UTAMA YANG DIPERBAIKI ---
+  // --- BAGIAN INI TELAH DIPERBAIKI SESUAI LOGIKA BARU ---
   Widget _buildMenuItemWithIngredients(dynamic itemPesanan) {
+    final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
-      title: Text('${itemPesanan.jumlah}x ${itemPesanan.namaMenu}', style: const TextStyle(fontWeight: FontWeight.bold)),
-      childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+      title: Text(
+        '${itemPesanan.jumlah}x ${itemPesanan.namaMenu}',
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      // Subtitle sekarang menampilkan harga per item dan totalnya
+      subtitle: Text('${currency.format(itemPesanan.harga)} / item  |  Total: ${currency.format(itemPesanan.harga * itemPesanan.jumlah)}'),
+      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
         FutureBuilder<DocumentSnapshot>(
           future: _firestore.collection('menu').doc(itemPesanan.menuId).get(),
@@ -121,7 +129,6 @@ class DetailPesananContent extends StatelessWidget {
               return const Text('Data bahan tidak ditemukan.');
             }
             
-            // PERBAIKAN 1: Menggunakan Menu.fromFirestore, bukan BahanBaku.fromFirestore
             final menu = Menu.fromFirestore(snapshot.data! as DocumentSnapshot<Map<String, dynamic>>);
 
             if (menu.bahan.isEmpty) {
@@ -131,10 +138,25 @@ class DetailPesananContent extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Bahan-bahan:', style: TextStyle(fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                // PERBAIKAN 2: Menggunakan nama properti yang benar (kuantitasPakai, satuanPakai)
-                ...menu.bahan.map((bahan) => Text('- ${bahan.namaBahan}: ${bahan.kuantitasPakai} ${bahan.satuanPakai}')).toList(),
+                const Divider(),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text('Total bahan untuk item ini:', style: TextStyle(fontWeight: FontWeight.w500)),
+                ),
+                ...menu.bahan.map((bahan) {
+                  // 1. Hitung total kuantitas untuk bahan ini
+                  final totalKuantitas = bahan.kuantitasPakai * itemPesanan.jumlah;
+                  
+                  // 2. Format angka agar tidak menampilkan desimal yang tidak perlu
+                  final formattedKuantitas = totalKuantitas.toStringAsFixed(2).replaceAll(RegExp(r'([.,]00)$'), '');
+                  
+                  // 3. Tampilkan hasil perhitungan
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+                    child: Text('- ${bahan.namaBahan}: $formattedKuantitas ${bahan.satuanPakai}'),
+                  );
+                // ignore: unnecessary_to_list_in_spreads
+                }).toList(),
               ],
             );
           },

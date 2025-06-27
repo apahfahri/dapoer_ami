@@ -62,15 +62,26 @@ class _HomePageState extends State<HomePage> {
   // --- Query Statistik (tidak berubah) ---
   Future<int> _getPesananHariIniCount() async {
     final now = DateTime.now();
-    final startOfToday = Timestamp.fromDate(DateTime(now.year, now.month, now.day));
-    final endOfToday = Timestamp.fromDate(DateTime(now.year, now.month, now.day + 1));
+    final startOfToday =
+        Timestamp.fromDate(DateTime(now.year, now.month, now.day));
+    final endOfToday =
+        Timestamp.fromDate(DateTime(now.year, now.month, now.day + 1));
 
-    final snapshot = await _firestore.collection('pesanan').where('tanggalKirim', isGreaterThanOrEqualTo: startOfToday).where('tanggalKirim', isLessThan: endOfToday).count().get();
+    final snapshot = await _firestore
+        .collection('pesanan')
+        .where('tanggalKirim', isGreaterThanOrEqualTo: startOfToday)
+        .where('tanggalKirim', isLessThan: endOfToday)
+        .count()
+        .get();
     return snapshot.count ?? 0;
   }
 
   Future<int> _getPerluDiprosesCount() async {
-    final snapshot = await _firestore.collection('pesanan').where('status', whereIn: ['Baru', 'Diproses']).count().get();
+    final snapshot = await _firestore
+        .collection('pesanan')
+        .where('status', whereIn: ['Baru', 'Diproses'])
+        .count()
+        .get();
     return snapshot.count ?? 0;
   }
 
@@ -79,7 +90,13 @@ class _HomePageState extends State<HomePage> {
     final startOfMonth = Timestamp.fromDate(DateTime(now.year, now.month, 1));
     final endOfMonth = Timestamp.fromDate(DateTime(now.year, now.month + 1, 1));
 
-    final snapshot = await _firestore.collection('pesanan').where('status', isEqualTo: 'Selesai').where('tanggalKirim', isGreaterThanOrEqualTo: startOfMonth).where('tanggalKirim', isLessThan: endOfMonth).count().get();
+    final snapshot = await _firestore
+        .collection('pesanan')
+        .where('status', isEqualTo: 'Selesai')
+        .where('tanggalKirim', isGreaterThanOrEqualTo: startOfMonth)
+        .where('tanggalKirim', isLessThan: endOfMonth)
+        .count()
+        .get();
     return snapshot.count ?? 0;
   }
 
@@ -112,25 +129,36 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Selamat Datang!', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('Selamat Datang!',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 const Text('Berikut ringkasan aktivitas catering Anda.'),
                 const SizedBox(height: 24),
                 _buildStatistikSection(),
                 const SizedBox(height: 24),
-                
+
                 // --- BAGIAN INI TELAH DIUBAH ---
-                _buildAksiCepatSection(), 
-                
+                _buildAksiCepatSection(),
+
                 const SizedBox(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Pesanan Terbaru', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Pesanan Terbaru',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     TextButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const KelolaPesananPage())),
-                      child: const Text('Lihat Semua')
-                    )
+                        onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const KelolaPesananPage())),
+                        child: const Text('Lihat Semua'))
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -146,16 +174,23 @@ class _HomePageState extends State<HomePage> {
   Widget _buildStatistikSection() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Hari Ini', _pesananHariIni, Icons.today, Colors.blue, _isLoadingStats)),
+        Expanded(
+            child: _buildStatCard('Hari Ini', _pesananHariIni, Icons.today,
+                Colors.blue, _isLoadingStats)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Perlu Diproses', _perluDiproses, Icons.pending_actions, Colors.orange, _isLoadingStats)),
+        Expanded(
+            child: _buildStatCard('Perlu Diproses', _perluDiproses,
+                Icons.pending_actions, Colors.orange, _isLoadingStats)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Selesai Bln Ini', _selesaiBulanIni, Icons.check_circle, Colors.green, _isLoadingStats)),
+        Expanded(
+            child: _buildStatCard('Selesai Bln Ini', _selesaiBulanIni,
+                Icons.check_circle, Colors.green, _isLoadingStats)),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, int value, IconData icon, Color color, bool isLoading) {
+  Widget _buildStatCard(
+      String title, int value, IconData icon, Color color, bool isLoading) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -165,8 +200,13 @@ class _HomePageState extends State<HomePage> {
             Icon(icon, size: 30, color: color),
             const SizedBox(height: 8),
             isLoading
-                ? const SizedBox(height: 27, width: 27, child: CircularProgressIndicator(strokeWidth: 3))
-                : Text(value.toString(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                ? const SizedBox(
+                    height: 27,
+                    width: 27,
+                    child: CircularProgressIndicator(strokeWidth: 3))
+                : Text(value.toString(),
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             Text(title, style: const TextStyle(color: Colors.grey)),
           ],
@@ -175,83 +215,55 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- METHOD INI YANG DIUBAH SECARA TOTAL ---
   Widget _buildAksiCepatSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch, // Agar tombol melebar penuh
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Tombol utama di atas
         ElevatedButton.icon(
-          icon: const Icon(Icons.add_shopping_cart),
+          icon: const Icon(Icons.add_shopping_cart, size: 28),
           label: const Text('Tambah Pesanan Baru'),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            textStyle:
+                const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          onPressed: () {
-            Navigator.push(
+          onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const TambahEditPesananPage()),
-            );
-          },
+              MaterialPageRoute(
+                  builder: (context) => const TambahEditPesananPage())),
         ),
         const SizedBox(height: 12),
-        // 2. Dua tombol sekunder di bawah dalam satu baris
-        Row(
+        Wrap(
+          spacing: 12.0, // Jarak horizontal antar tombol
+          runSpacing: 12.0, // Jarak vertikal jika tombol pindah baris
+          alignment: WrapAlignment.center,
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.assignment),
-                label: const Text('Kelola Pesanan'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  textStyle: const TextStyle(fontSize: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () {
-                   Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const KelolaPesananPage()),
-                  );
-                },
-              ),
+            _buildSecondaryButton(
+              label: 'Kelola Pesanan',
+              icon: Icons.assignment_outlined,
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const KelolaPesananPage())),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.restaurant_menu),
-                label: const Text('Kelola Menu'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  textStyle: const TextStyle(fontSize: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const KelolaMenuPage()),
-                  );
-                },
-              ),
+            _buildSecondaryButton(
+              label: 'Kelola Menu',
+              icon: Icons.restaurant_menu_outlined,
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const KelolaMenuPage())),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.restaurant_menu),
-                label: const Text('Kelola Bahan Baku'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  textStyle: const TextStyle(fontSize: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const KelolaBahanBakuPage()),
-                  );
-                },
-              ),
+            // BUGFIX: Mengganti ikon yang duplikat
+            _buildSecondaryButton(
+              label: 'Kelola Bahan',
+              icon: Icons.inventory_2_outlined,
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const KelolaBahanBakuPage())),
             ),
           ],
         )
@@ -259,15 +271,48 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Helper widget untuk membuat tombol sekunder agar kode tidak berulang
+  Widget _buildSecondaryButton(
+      {required String label,
+      required IconData icon,
+      required VoidCallback onPressed}) {
+    // Tombol ini akan memiliki lebar minimal, namun bisa membesar
+    return ElevatedButton.icon(
+      icon: Icon(icon, size: 20),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.white,
+        side:
+            BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.5)),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 1,
+      ),
+      onPressed: onPressed,
+    );
+  }
+
   Widget _buildDaftarPesananTerbaru() {
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('pesanan').orderBy('tanggalPesan', descending: true).limit(5).snapshots(),
+      stream: _firestore
+          .collection('pesanan')
+          .orderBy('tanggalPesan', descending: true)
+          .limit(5)
+          .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('Belum ada pesanan.', style: TextStyle(color: Colors.grey))));
+          return const Center(
+              child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('Belum ada pesanan.',
+                      style: TextStyle(color: Colors.grey))));
         }
 
         return ListView.builder(
@@ -284,22 +329,31 @@ class _HomePageState extends State<HomePage> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: _getStatusColor(status).withOpacity(0.2),
-                  child: Icon(Icons.receipt_long, color: _getStatusColor(status)),
+                  child:
+                      Icon(Icons.receipt_long, color: _getStatusColor(status)),
                 ),
-                title: Text(data['namaPelanggan'] ?? 'Tanpa Nama', style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('Kirim: ${DateFormat('dd MMM', 'id_ID').format((data['tanggalKirim'] as Timestamp).toDate())} - ${currencyFormatter.format(data['grandTotal'] ?? 0)}'),
+                title: Text(data['namaPelanggan'] ?? 'Tanpa Nama',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(
+                    'Kirim: ${DateFormat('dd MMM', 'id_ID').format((data['tanggalKirim'] as Timestamp).toDate())} - ${currencyFormatter.format(data['grandTotal'] ?? 0)}'),
                 trailing: Chip(
-                  label: Text(status, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  label: Text(status,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 12)),
                   backgroundColor: _getStatusColor(status),
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onTap: () {
-                  final pesanan = Pesanan.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+                  final pesanan = Pesanan.fromFirestore(
+                      doc as DocumentSnapshot<Map<String, dynamic>>);
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(16))),
                     builder: (context) {
                       return DraggableScrollableSheet(
                         expand: false,
@@ -310,7 +364,8 @@ class _HomePageState extends State<HomePage> {
                           return SingleChildScrollView(
                             controller: scrollController,
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
+                              padding:
+                                  const EdgeInsets.fromLTRB(24, 24, 24, 48),
                               child: DetailPesananContent(pesanan: pesanan),
                             ),
                           );
@@ -329,11 +384,15 @@ class _HomePageState extends State<HomePage> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai': return Colors.green;
-      case 'diproses': return Colors.orange;
-      case 'batal': return Colors.red;
+      case 'selesai':
+        return Colors.green;
+      case 'diproses':
+        return Colors.orange;
+      case 'batal':
+        return Colors.red;
       case 'baru':
-      default: return Colors.blue;
+      default:
+        return Colors.blue;
     }
   }
 }
