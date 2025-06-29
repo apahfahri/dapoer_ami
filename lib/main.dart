@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 2,
         ),
-        scaffoldBackgroundColor: const Color.fromARGB(255, 188, 219, 255),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 230, 242, 255),
       ),
       // 'home' akan diisi oleh AuthWrapper yang menentukan halaman awal.
       home: const AuthWrapper(),

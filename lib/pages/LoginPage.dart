@@ -116,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Login ke akun pengelola catering Anda',
+                    'Login ke akun pengelola catering Dapoer Ami',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,

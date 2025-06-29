@@ -7,8 +7,6 @@ import 'package:dapoer_ami/widgets/DetailBahanBakuContent.dart';
 
 // lib/pages/kelola_bahan_baku_page.dart
 
-
-
 class KelolaBahanBakuPage extends StatefulWidget {
   const KelolaBahanBakuPage({super.key});
 
@@ -17,12 +15,32 @@ class KelolaBahanBakuPage extends StatefulWidget {
 }
 
 class _KelolaBahanBakuPageState extends State<KelolaBahanBakuPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final NumberFormat _currencyFormatter = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    // Tambahkan listener untuk mendeteksi perubahan pada input pencarian
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // Jangan lupa untuk membersihkan controller
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // Fungsi untuk menampilkan dialog konfirmasi sebelum menghapus
   void _showDeleteConfirmationDialog(BahanBaku bahanBaku) {
@@ -45,7 +63,10 @@ class _KelolaBahanBakuPageState extends State<KelolaBahanBakuPage> {
               child: const Text('Hapus'),
               onPressed: () async {
                 try {
-                  await _firestore.collection('bahan_baku').doc(bahanBaku.id).delete();
+                  await _firestore
+                      .collection('bahan_baku')
+                      .doc(bahanBaku.id)
+                      .delete();
                   Navigator.of(ctx).pop();
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -58,7 +79,7 @@ class _KelolaBahanBakuPageState extends State<KelolaBahanBakuPage> {
                 } catch (e) {
                   Navigator.of(ctx).pop();
                   if (mounted) {
-                     ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Gagal menghapus bahan baku: $e'),
                         backgroundColor: Colors.red,
@@ -80,127 +101,191 @@ class _KelolaBahanBakuPageState extends State<KelolaBahanBakuPage> {
       appBar: AppBar(
         title: const Text('Kelola Bahan Baku'),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('bahan_baku').orderBy('nama').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text(
-                'Belum ada bahan baku.\nSilakan tambahkan data.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey)
-              )
-            );
-          }
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Cari Bahan Baku',
+                hintText: 'Ketik nama bahan...',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                ),
+                // Tambahkan tombol untuk membersihkan input
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                      )
+                    : null,
+              ),
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('bahan_baku')
+                  .orderBy('nama')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                      child: Text(
+                          'Belum ada bahan baku.\nSilakan tambahkan data.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey)));
+                }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              BahanBaku bahanBaku = BahanBaku.fromFirestore(
-                  snapshot.data!.docs[index] as DocumentSnapshot<Map<String, dynamic>>);
-              
-              // Format harga per unit agar lebih informatif
-              final formattedHargaPerUnit = NumberFormat.currency(
-                locale: 'id_ID', 
-                symbol: 'Rp ', 
-                decimalDigits: 2
-              ).format(bahanBaku.hargaPerUnit);
+                final allDocs = snapshot.data!.docs;
+                final filteredDocs = _searchQuery.isEmpty
+                    ? allDocs
+                    : allDocs.where((doc) {
+                        final bahanBaku = BahanBaku.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+                        return bahanBaku.nama.toLowerCase().contains(_searchQuery.toLowerCase());
+                      }).toList();
+                
+                if (filteredDocs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Bahan baku dengan nama "$_searchQuery" tidak ditemukan.',
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }
 
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                elevation: 2,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12.0),
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(16))),
-                      builder: (context) {
-                        return DraggableScrollableSheet(
-                          expand: false,
-                          initialChildSize: 0.4, // Ukuran bisa lebih kecil
-                          minChildSize: 0.2,
-                          maxChildSize: 0.6,
-                          builder: (context, scrollController) {
-                            return SingleChildScrollView(
-                              controller: scrollController,
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
-                                child: DetailBahanBakuContent(bahanBaku: bahanBaku),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                            // padding: const EdgeInsets.only(left: 8.0),
-                            
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(bahanBaku.nama, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Harga Beli: ${_currencyFormatter.format(bahanBaku.hargaBeli)} / ${bahanBaku.kuantitasBeli} ${bahanBaku.satuanBeli}',
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    BahanBaku bahanBaku = BahanBaku.fromFirestore(snapshot.data!
+                        .docs[index] as DocumentSnapshot<Map<String, dynamic>>);
+
+                    // Format harga per unit agar lebih informatif
+                    // ignore: unused_local_variable
+                    final formattedHargaPerUnit = NumberFormat.currency(
+                            locale: 'id_ID', symbol: 'Rp ', decimalDigits: 2)
+                        .format(bahanBaku.hargaPerUnit);
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 4.0),
+                      elevation: 2,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12.0),
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16))),
+                            builder: (context) {
+                              return DraggableScrollableSheet(
+                                expand: false,
+                                initialChildSize:
+                                    0.4, // Ukuran bisa lebih kecil
+                                minChildSize: 0.2,
+                                maxChildSize: 0.6,
+                                builder: (context, scrollController) {
+                                  return SingleChildScrollView(
+                                    controller: scrollController,
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          24, 24, 24, 48),
+                                      child: DetailBahanBakuContent(
+                                          bahanBaku: bahanBaku),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6.0, vertical: 4.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0, horizontal: 8.0),
+                                  // padding: const EdgeInsets.only(left: 8.0),
+
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(bahanBaku.nama,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Harga Beli: ${_currencyFormatter.format(bahanBaku.hargaBeli)} / ${bahanBaku.kuantitasBeli} ${bahanBaku.satuanBeli}',
+                                      ),
+                                      // Text(
+                                      //   'Harga per ${bahanBaku.satuanBeli}: $formattedHargaPerUnit',
+                                      //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      // ),
+                                    ],
+                                  ),
                                 ),
-                                // Text(
-                                //   'Harga per ${bahanBaku.satuanBeli}: $formattedHargaPerUnit',
-                                //   style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                // ),
-                              ],
-                            ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined,
+                                        color: Colors.blueAccent),
+                                    tooltip: 'Edit Bahan Baku',
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                TambahEditBahanBakuPage(
+                                                    bahanBaku: bahanBaku)),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline,
+                                        color: Colors.redAccent),
+                                    tooltip: 'Hapus Bahan Baku',
+                                    onPressed: () =>
+                                        _showDeleteConfirmationDialog(
+                                            bahanBaku),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
-                              tooltip: 'Edit Bahan Baku',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => TambahEditBahanBakuPage(bahanBaku: bahanBaku)),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                              tooltip: 'Hapus Bahan Baku',
-                              onPressed: () => _showDeleteConfirmationDialog(bahanBaku),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const TambahEditBahanBakuPage()),
+            MaterialPageRoute(
+                builder: (context) => const TambahEditBahanBakuPage()),
           );
         },
         tooltip: 'Tambah Bahan Baku',

@@ -22,11 +22,27 @@ class DetailPesananContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min, // Penting untuk Dialog/Bottom Sheet
       children: [
         // Kita tidak perlu Card/Section lagi karena sudah di dalam Dialog
+        _buildInformasiPesananSection(pesanan),
         _buildPelangganSection(pesanan),
         const Divider(height: 24),
         _buildItemsSection(pesanan),
         const Divider(height: 24),
         _buildBiayaSection(pesanan, currency),
+      ],
+    );
+  }
+
+  // --- WIDGET BARU UNTUK INFORMASI PESANAN ---
+  Widget _buildInformasiPesananSection(Pesanan pesanan) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Informasi Pesanan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        _detailRow("No. Pesanan:", pesanan.id.substring(0, 8).toUpperCase()),
+        _detailRow("Tanggal Pesan:", DateFormat('EEEE, dd MMM yy', 'id_ID').format(pesanan.tanggalPesan)),
+        _detailRow("Tanggal Kirim:", DateFormat('EEEE, dd MMMM yy', 'id_ID').format(pesanan.tanggalKirim)),
+        if (pesanan.catatan.isNotEmpty) _detailRow("Catatan:", pesanan.catatan),
       ],
     );
   }
@@ -41,8 +57,6 @@ class DetailPesananContent extends StatelessWidget {
         _detailRow("Nama:", pesanan.namaPelanggan),
         _detailRow("Telepon:", pesanan.noTelepon),
         _detailRow("Alamat:", pesanan.alamat),
-        _detailRow("Tanggal Kirim:", DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(pesanan.tanggalKirim)),
-        if (pesanan.catatan.isNotEmpty) _detailRow("Catatan:", pesanan.catatan),
       ],
     );
   }

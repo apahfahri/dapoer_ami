@@ -50,9 +50,9 @@ class _TambahEditPesananPageState extends State<TambahEditPesananPage> {
     }
 
     int currentDiskon = 0;
-    // LOGIKA DISKON: Jika total item lebih dari 100, dapat diskon 50%
-    if (totalItem > 100) {
-      currentDiskon = (currentSubTotal * 0.5).round();
+    // LOGIKA DISKON: Jika total item lebih dari 100, dapat diskon 25%
+    if (totalItem >= 100) {
+      currentDiskon = (currentSubTotal * 0.25).round();
     }
     
     setState(() {

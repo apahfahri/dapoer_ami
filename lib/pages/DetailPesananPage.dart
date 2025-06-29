@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import '../models/pesanan_model.dart';
 import '../models/menu_model.dart';
 // import '../models/bahan_menu_model.dart';
+import '../services/pdf_invoice_services.dart';
 
 class DetailPesananPage extends StatefulWidget {
   final String pesananId;
@@ -70,10 +72,86 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
     return aggregatedIngredients;
   }
 
+  void _showConfirmationDialog({
+    required BuildContext context,
+    required String title,
+    required String content,
+    required VoidCallback onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: title.contains("Batalkan")
+                    ? Colors.red
+                    : Theme.of(context).primaryColor,
+              ),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                onConfirm();
+              },
+              child: const Text(
+                'Ya, Lanjutkan',
+                style: TextStyle(color: Colors.white),
+                // selectionColor: Colors.white,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _exportToPdf(Pesanan pesanan) async {
+    final pdfService = PdfInvoiceService(pesanan: pesanan);
+    final fileName = pdfService.generateFileName();
+    final pdfBytes = await pdfService.createInvoice();
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdfBytes,
+      name: fileName,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Pesanan')),
+      appBar: AppBar(
+        title: const Text('Detail Pesanan'),
+        actions: [
+          // Tombol ekspor struk tetap ada dan bisa digunakan kapan saja
+          StreamBuilder<DocumentSnapshot>(
+            stream: _firestore
+                .collection('pesanan')
+                .doc(widget.pesananId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const IconButton(
+                    icon: Icon(Icons.picture_as_pdf), onPressed: null);
+              }
+              final pesanan = Pesanan.fromFirestore(
+                  snapshot.data! as DocumentSnapshot<Map<String, dynamic>>);
+              return IconButton(
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                tooltip: 'Ekspor ke PDF',
+                onPressed: () => _exportToPdf(pesanan),
+              );
+            },
+          ),
+        ],
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream:
             _firestore.collection('pesanan').doc(widget.pesananId).snapshots(),
@@ -95,13 +173,14 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSection("Status Pesanan", _buildStatusSection(pesanan)),
-
-                // --- BAGIAN BARU DITAMBAHKAN DI SINI ---
-                _buildKebutuhanBahanSection(pesanan),
-
+                // --- PERUBAHAN UTAMA ADA DI SINI ---
+                _buildSection(
+                    "Aksi & Status Pesanan", _buildStatusSection(pesanan)),
+                _buildSection("Informasi Pesanan",
+                    _buildInformasiPesananSection(pesanan)),
                 _buildSection(
                     "Informasi Pelanggan", _buildPelangganSection(pesanan)),
+                _buildKebutuhanBahanSection(pesanan),
                 _buildSection("Item yang Dipesan", _buildItemsSection(pesanan)),
                 _buildSection("Ringkasan Pembayaran",
                     _buildBiayaSection(pesanan, currency)),
@@ -110,6 +189,135 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
           );
         },
       ),
+    );
+  }
+
+  // --- WIDGET BAGIAN STATUS YANG DIROMBAK TOTAL ---
+  Widget _buildStatusSection(Pesanan pesanan) {
+    // Tampilan berdasarkan status pesanan saat ini
+    switch (pesanan.status) {
+      case 'Baru':
+        return Column(
+          children: [
+            _buildStatusChip('Baru', Colors.blue),
+            const SizedBox(height: 16),
+            const Text('Pesanan ini menunggu konfirmasi Anda.',
+                textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Batalkan'),
+                    style:
+                        OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    onPressed: () {
+                      _showConfirmationDialog(
+                        context: context,
+                        title: 'Batalkan Pesanan?',
+                        content:
+                            'Apakah Anda yakin ingin membatalkan pesanan ini?',
+                        onConfirm: () => _updateStatus('Batal', pesanan.id),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Konfirmasi'),
+                    onPressed: () {
+                      _showConfirmationDialog(
+                        context: context,
+                        title: 'Konfirmasi Pesanan?',
+                        content:
+                            'Konfirmasi akan mengubah status menjadi "Diproses" dan pesanan siap dibuat.',
+                        onConfirm: () => _updateStatus('Diproses', pesanan.id),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+
+      case 'Diproses':
+        return Column(
+          children: [
+            _buildStatusChip('Diproses', Colors.orange),
+            const SizedBox(height: 16),
+            const Text(
+                'Pesanan sedang dalam proses pembuatan. Klik selesai jika sudah siap diantar.',
+                textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Batalkan'),
+                    style:
+                        OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    onPressed: () {
+                      _showConfirmationDialog(
+                        context: context,
+                        title: 'Batalkan Pesanan?',
+                        content:
+                            'Apakah Anda yakin ingin membatalkan pesanan yang sedang diproses ini?',
+                        onConfirm: () => _updateStatus('Batal', pesanan.id),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.task_alt),
+                    label: const Text('Selesai',style: TextStyle(color: Colors.white),),
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green,iconColor: Colors.white),
+                    onPressed: () {
+                      _showConfirmationDialog(
+                        context: context,
+                        title: 'Selesaikan Pesanan?',
+                        content:
+                            'Pesanan akan ditandai sebagai "Selesai" dan struk akan dicetak.',
+                        onConfirm: () {
+                          _updateStatus('Selesai', pesanan.id);
+                          _exportToPdf(pesanan);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+
+      case 'Selesai':
+        return Center(child: _buildStatusChip('Selesai', Colors.green));
+
+      case 'Batal':
+        return Center(child: _buildStatusChip('Dibatalkan', Colors.red));
+
+      default:
+        return Center(child: Text('Status tidak diketahui: ${pesanan.status}'));
+    }
+  }
+
+  // Helper widget untuk membuat "chip" status agar bisa dipakai ulang
+  Widget _buildStatusChip(String status, Color color) {
+    return Chip(
+      label: Text(status,
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold)),
+      backgroundColor: color,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      labelStyle: const TextStyle(fontSize: 16),
     );
   }
 
@@ -180,22 +388,6 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
     );
   }
 
-  Widget _buildStatusSection(Pesanan pesanan) {
-    final statuses = ['Baru', 'Diproses', 'Selesai', 'Batal'];
-    return DropdownButtonFormField<String>(
-      value: pesanan.status,
-      decoration: const InputDecoration(border: OutlineInputBorder()),
-      items: statuses.map((String status) {
-        return DropdownMenuItem<String>(value: status, child: Text(status));
-      }).toList(),
-      onChanged: (String? newValue) {
-        if (newValue != null && newValue != pesanan.status) {
-          _updateStatus(newValue, pesanan.id);
-        }
-      },
-    );
-  }
-
   Widget _buildPelangganSection(Pesanan pesanan) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,9 +395,22 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
         _detailRow("Nama:", pesanan.namaPelanggan),
         _detailRow("Telepon:", pesanan.noTelepon),
         _detailRow("Alamat:", pesanan.alamat),
+      ],
+    );
+  }
+
+  Widget _buildInformasiPesananSection(Pesanan pesanan) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _detailRow("No. Pesanan:", pesanan.id.substring(0, 8).toUpperCase()),
+        _detailRow(
+            "Tanggal Pesan:",
+            DateFormat('EEEE, dd MMM yy', 'id_ID')
+                .format(pesanan.tanggalPesan)),
         _detailRow(
             "Tanggal Kirim:",
-            DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
+            DateFormat('EEEE, dd MMM yy', 'id_ID')
                 .format(pesanan.tanggalKirim)),
         if (pesanan.catatan.isNotEmpty) _detailRow("Catatan:", pesanan.catatan),
       ],
